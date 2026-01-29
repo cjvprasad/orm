@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hibernate Mapping & Performance Master-Reference</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #f1f5f9; font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        .code-block { background: #0f172a; color: #f1f5f9; padding: 1.25rem; border-radius: 8px; font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.6; margin-top: 10px; border-left: 4px solid #4f46e5; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 2.5rem; overflow: hidden; border: 1px solid #e2e8f0; }
+        .card-header { background: #1e1b4b; color: white; padding: 1rem 1.5rem; font-weight: 700; font-size: 1.1rem; }
+        .logic-box { background: #f8fafc; border-left: 4px solid #6366f1; padding: 1rem; margin-top: 1rem; font-size: 0.9rem; }
+        .warning-box { background: #fff1f2; border-left: 4px solid #e11d48; padding: 1rem; margin-top: 1rem; font-size: 0.9rem; color: #9f1239; }
+        .annotation { color: #d8b4fe; }
+        .keyword { color: #7dd3fc; }
+        .comment { color: #94a3b8; font-style: italic; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <header class="bg-indigo-900 text-white py-16 px-6 shadow-2xl">
+        <div class="max-w-5xl mx-auto text-center">
+            <h1 class="text-4xl font-black italic tracking-tighter uppercase">The Hibernate Blueprint</h1>
+            <p class="text-indigo-300 mt-2 uppercase tracking-widest text-sm font-bold">Comprehensive Mapping & Performance Guide</p>
+            <div class="mt-6">
+                <a href="https://stackoverflow.com/questions/24257449/how-do-i-use-annotations-to-define-different-types-of-relationships-in-hibernate" 
+                   target="_blank" 
+                   class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-full text-sm font-bold transition">
+                    View Original Discussion on StackOverflow
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto py-10 px-6">
+
+        <h2 class="text-3xl font-bold mb-8 text-indigo-900 border-b-4 border-indigo-200 inline-block">01. Primary Relationship Mappings</h2>
+
+        <div class="card">
+            <div class="card-header">1. Uni-directional One to One</div>
+            <div class="p-6">
+                <p class="text-sm mb-4">The simplest relationship. Only the source entity contains a foreign key to the target.</p>
+                
+                <div class="code-block">
+                    <span class="annotation">@Entity</span><br>
+                    <span class="keyword">public class</span> User {<br>
+                    &nbsp;&nbsp;<span class="annotation">@Id @GeneratedValue</span><span class="keyword"> private</span> Long id;<br>
+                    &nbsp;&nbsp;<span class="annotation">@OneToOne</span>(cascade = CascadeType.ALL)<br>
+                    &nbsp;&nbsp;<span class="annotation">@JoinColumn</span>(name = "profile_id", referencedColumnName = "id")<br>
+                    &nbsp;&nbsp;<span class="keyword">private</span> Profile profile;<br>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">2. Bi-Directional One to One</div>
+            <div class="p-6">
+                <p class="text-sm mb-4">Both entities reference each other. One side MUST use <code>mappedBy</code> to identify the non-owning side.</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="code-block text-xs">
+                        <span class="comment">// Owner (Physical FK in DB)</span><br>
+                        <span class="annotation">@OneToOne</span><br>
+                        <span class="annotation">@JoinColumn</span>(name = "person_id")<br>
+                        <span class="keyword">private</span> Person person;
+                    </div>
+                    <div class="code-block text-xs">
+                        <span class="comment">// Inverse (Java-only link)</span><br>
+                        <span class="annotation">@OneToOne</span>(mappedBy = "person")<br>
+                        <span class="keyword">private</span> Passport passport;
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">3. Uni-Directional One to Many</div>
+            <div class="p-6">
+                <p class="text-sm mb-2">A single parent has a collection of children. Always use <code>@JoinColumn</code> to avoid an automatic join table.</p>
+                <div class="code-block">
+                    <span class="annotation">@OneToMany</span>(cascade = CascadeType.ALL)<br>
+                    <span class="annotation">@JoinColumn</span>(name = "order_id") <span class="comment">// FK is stored in the Child table</span><br>
+                    <span class="keyword">private</span> List&lt;Item&gt; items;
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">4. Bi-directional One to Many (Foreign Key Mapping)</div>
+            <div class="p-6">
+                <p class="text-sm mb-4">The standard approach. The 'Many' side owns the relationship because it holds the <code>dept_id</code> FK.</p>
+                
+                <div class="code-block">
+                    <span class="comment">// In Employee.java (The Owner)</span><br>
+                    <span class="annotation">@ManyToOne</span><br>
+                    <span class="annotation">@JoinColumn</span>(name = "dept_id")<br>
+                    <span class="keyword">private</span> Department department;
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">5. Bi-Directional Many to Many (Hibernate Managed Join Table)</div>
+            <div class="p-6">
+                <p class="text-sm mb-2">Hibernate hides the link table from the Java code. Use this for simple associations.</p>
+                <div class="code-block text-xs">
+                    <span class="annotation">@ManyToMany</span><br>
+                    <span class="annotation">@JoinTable</span>(<br>
+                    &nbsp;&nbsp;name = "student_course",<br>
+                    &nbsp;&nbsp;joinColumns = <span class="annotation">@JoinColumn</span>(name = "student_id"),<br>
+                    &nbsp;&nbsp;inverseJoinColumns = <span class="annotation">@JoinColumn</span>(name = "course_id")<br>
+                    )<br>
+                    <span class="keyword">private</span> Set&lt;Course&gt; courses;
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">6. Bi-Directional Many to Many (User Managed Join Table Object)</div>
+            <div class="p-6">
+                <p class="text-sm mb-4">Required when the "Relationship" itself has data (e.g., Score, Timestamp, or Quantity).</p>
+                
+                <div class="code-block">
+                    <span class="comment">// The middle entity (Link Table Object)</span><br>
+                    <span class="annotation">@Entity</span><br>
+                    <span class="keyword">public class</span> Enrollment {<br>
+                    &nbsp;&nbsp;<span class="annotation">@ManyToOne</span><span class="keyword"> private</span> Student student;<br>
+                    &nbsp;&nbsp;<span class="annotation">@ManyToOne</span><span class="keyword"> private</span> Course course;<br>
+                    &nbsp;&nbsp;<span class="keyword">private int</span> grade; <span class="comment">// User-managed extra data</span><br>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <h2 class="text-3xl font-bold mb-8 text-indigo-900 border-b-4 border-indigo-200 inline-block">02. Ownership & Performance Logic</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            <div class="p-6 bg-white rounded-xl shadow border">
+                <h3 class="font-bold text-lg text-indigo-800 mb-3 underline">Ownership Strategy</h3>
+                <p class="text-sm mb-2">Ownership determines which table the FK is stored on. Typically, the Many-side owns the link.</p>
+                <div class="logic-box">
+                    <strong>Example:</strong> In a User-Role setup, manipulate the Roles through the list of Roles on a User by using Cascade. This is O(1) in terms of DAO logic compared to iterating through roles.
+                </div>
+            </div>
+
+            <div class="p-6 bg-white rounded-xl shadow border">
+                <h3 class="font-bold text-lg text-indigo-800 mb-3 underline">Fetch Strategy (LAZY vs EAGER)</h3>
+                <p class="text-sm mb-2">Lazily fetched collections are safer. <code>EAGER</code> loading can lead to massive performance penalties and Heap memory issues.</p>
+                <div class="logic-box">
+                    <strong>Manual Load:</strong> If you need a collection just for one call, use:<br>
+                    <code>Hibernate.initialize(person.getRoles());</code>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-t-4 border-red-500">
+            <div class="card-header bg-red-900">Advanced Case Study: Heap Crash & Batching</div>
+            <div class="p-6">
+                <p class="text-sm mb-4">For bulk jobs (e.g., <80,000+ inserts), standard Hibernate caching will crash the system. <strong>Always flush and clear:</strong></p>
+                <div class="code-block">
+                    <span class="keyword">for</span> (<span class="keyword">int</span> i = 0; i < objects.size(); i++) {<br>
+                    &nbsp;&nbsp;em.persist(objects.get(i));<br>
+                    &nbsp;&nbsp;<span class="keyword">if</span> (i % 50 == 0) {<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;em.flush(); em.clear(); <span class="comment">// Fixes memory leak</span><br>
+                    &nbsp;&nbsp;}<br>
+                    }
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-indigo-950 text-indigo-400 py-12 text-center text-xs">
+        <p>Reference Guide for Hibernate & JPA | Based on community insights from StackOverflow</p>
+    </footer>
+
+</body>
+</html>
