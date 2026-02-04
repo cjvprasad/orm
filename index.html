@@ -3,177 +3,505 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hibernate Mapping & Performance Master-Reference</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>JPA Master Reference - Collapsible View</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f1f5f9; font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
-        .code-block { background: #0f172a; color: #f1f5f9; padding: 1.25rem; border-radius: 8px; font-family: 'Fira Code', monospace; font-size: 0.85rem; line-height: 1.6; margin-top: 10px; border-left: 4px solid #4f46e5; }
-        .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 2.5rem; overflow: hidden; border: 1px solid #e2e8f0; }
-        .card-header { background: #1e1b4b; color: white; padding: 1rem 1.5rem; font-weight: 700; font-size: 1.1rem; }
-        .logic-box { background: #f8fafc; border-left: 4px solid #6366f1; padding: 1rem; margin-top: 1rem; font-size: 0.9rem; }
-        .warning-box { background: #fff1f2; border-left: 4px solid #e11d48; padding: 1rem; margin-top: 1rem; font-size: 0.9rem; color: #9f1239; }
-        .annotation { color: #d8b4fe; }
-        .keyword { color: #7dd3fc; }
-        .comment { color: #94a3b8; font-style: italic; }
+        :root {
+            --jpa-blue: #0056b3;
+            --jpa-light: #e7f1ff;
+            --code-bg: #282c34;
+            --code-text: #abb2bf;
+        }
+        body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        .accordion-button { background-color: #0056b3 !important; color: white !important; font-weight: bold; }
+        .accordion-button:not(.collapsed) { background-color: #004494 !important; }
+        .accordion-button::after { filter: brightness(0) invert(1); }
+        .accordion-item { border: none; margin-bottom: 15px; border-radius: 8px !important; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+/* Code Blocks */
+        pre { 
+            background: var(--code-bg); 
+            color: var(--code-text);
+            padding: 15px; 
+            border-radius: 8px; 
+            font-size: 0.85rem; 
+            border-left: 4px solid #61dafb;
+            overflow-x: auto;
+        }
+           .anno { color: #d19a66; } /* Annotation color */
+        .keyword { color: #c678dd; } /* Class/Public color */
+                table { font-size: 0.9rem; }
+        th { background-color: #f8f9fa !important; width: 25%; }
+        .controls { position: sticky; top: 10px; z-index: 1000; background: rgba(244, 247, 246, 0.9); padding: 10px 0; }
     </style>
 </head>
-<body class="text-slate-800">
+<body>
 
-    <header class="bg-indigo-900 text-white py-16 px-6 shadow-2xl">
-        <div class="max-w-5xl mx-auto text-center">
-            <h1 class="text-4xl font-black italic tracking-tighter uppercase">The Hibernate Blueprint</h1>
-            <p class="text-indigo-300 mt-2 uppercase tracking-widest text-sm font-bold">Comprehensive Mapping & Performance Guide</p>
-            <div class="mt-6">
-                <a href="https://stackoverflow.com/questions/24257449/how-do-i-use-annotations-to-define-different-types-of-relationships-in-hibernate" 
-                   target="_blank" 
-                   class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-full text-sm font-bold transition">
-                    View Original Discussion on StackOverflow
-                </a>
-            </div>
-        </div>
-    </header>
+<div class="container">
+    <h1 class="mb-4">JPA/Hibernate Relationship Cheatsheet</h1>
 
-    <main class="max-w-5xl mx-auto py-10 px-6">
+    <div class="controls mb-3">
+        <button class="btn btn-primary btn-sm" onclick="expandAll()">Expand All</button>
+        <button class="btn btn-secondary btn-sm" onclick="collapseAll()">Collapse All</button>
+        <input type="text" id="searchInput" class="form-control d-inline-block w-50 ms-2" placeholder="Search keywords...">
+    </div>
 
-        <h2 class="text-3xl font-bold mb-8 text-indigo-900 border-b-4 border-indigo-200 inline-block">01. Primary Relationship Mappings</h2>
+    
 
-        <div class="card">
-            <div class="card-header">1. Uni-directional One to One</div>
-            <div class="p-6">
-                <p class="text-sm mb-4">The simplest relationship. Only the source entity contains a foreign key to the target.</p>
-                
-                <div class="code-block">
-                    <span class="annotation">@Entity</span><br>
-                    <span class="keyword">public class</span> User {<br>
-                    &nbsp;&nbsp;<span class="annotation">@Id @GeneratedValue</span><span class="keyword"> private</span> Long id;<br>
-                    &nbsp;&nbsp;<span class="annotation">@OneToOne</span>(cascade = CascadeType.ALL)<br>
-                    &nbsp;&nbsp;<span class="annotation">@JoinColumn</span>(name = "profile_id", referencedColumnName = "id")<br>
-                    &nbsp;&nbsp;<span class="keyword">private</span> Profile profile;<br>
-                    }
+    <div class="accordion" id="jpaAccordion">
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sec1">
+                    @ONETOONE
+                </button>
+            </h2>
+            <div id="sec1" class="accordion-collapse collapse" data-bs-parent="#jpaAccordion">
+                <div class="accordion-body p-0">
+                        <table class="table table-bordered align-middle">
+                        <thead>
+                            <tr>
+                                <th>Section</th>
+                                <th>Uni-directional One-to-One</th>
+                                <th>Bi-directional One-to-One (managed by Foo)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Uni / Bi Usage</td><td>Use uni-directional when only one side needs navigation</td><td>Use bi-directional only when both sides must navigate</td></tr>
+                            <tr><td>Relationship Type</td><td>Foo -> Bar</td><td>Foo <-> Bar</td></tr>
+                            <tr><td>Navigation</td><td>Foo can access Bar only</td><td>Foo can access Bar and Bar can access Foo</td></tr>
+                            <tr><td>Owning Side</td><td>Foo</td><td>Foo</td></tr>
+                            <tr><td>Foreign Key Location</td><td>foo.bar_id</td><td>foo.bar_id</td></tr>
+                            <tr><td>Entity Annotations</td><td>@Entity, @Table</td><td>@Entity, @Table</td></tr>
+                               <tr><td>Foo Entity Code</td>
+                                    <td><pre><span class="anno">@Entity</span>
+<span class="anno">@Table</span>(name = "foo")
+<span class="keyword">public class</span> Foo {
+  <span class="anno">@Id</span>
+  <span class="keyword">private</span> UUID fooId;
+
+  <span class="anno">@OneToOne</span>
+  <span class="anno">@JoinColumn</span>(name = "bar_id")
+  <span class="keyword">private</span> Bar bar;
+}</pre></td>
+                                    <td><pre><span class="anno">@Entity</span>
+<span class="anno">@Table</span>(name = "foo")
+<span class="keyword">public class</span> Foo {
+  <span class="anno">@Id</span>
+  <span class="keyword">private</span> UUID fooId;
+
+  <span class="anno">@OneToOne</span>(cascade = CascadeType.ALL)
+  <span class="anno">@JoinColumn</span>(name = "bar_id")
+  <span class="keyword">private</span> Bar bar;
+}</pre></td>
+                                </tr>
+                                <tr><td>Bar Entity Code</td>
+                                    <td><pre><span class="anno">@Entity</span>
+<span class="anno">@Table</span>(name = "bar")
+<span class="keyword">public class</span> Bar {
+  <span class="anno">@Id</span>
+  <span class="keyword">private</span> UUID barId;
+  <span class="comment">// no reference to Foo</span>
+}</pre></td>
+                                    <td><pre><span class="anno">@Entity</span>
+<span class="anno">@Table</span>(name = "bar")
+<span class="keyword">public class</span> Bar {
+  <span class="anno">@Id</span>
+  <span class="keyword">private</span> UUID barId;
+
+  <span class="anno">@OneToOne</span>(mappedBy = "bar")
+  <span class="keyword">private</span> Foo foo;
+}</pre></td>
+                                </tr>
+                            <tr><td>DB Table Structure</td><td>foo(bar_id FK)<br>bar(no FK)</td><td>foo(bar_id FK)<br>bar(no FK)</td></tr>
+                            <tr><td>Code Complexity</td><td>Simple</td><td>Higher – must sync both sides</td></tr>
+                            <tr><td>Infinite Loop Risk (JSON)</td><td>None</td><td>Possible without @JsonIgnore / refs</td></tr>
+                            <tr><td>Loop Prevention Strategy</td><td>Not required</td><td>@JsonIgnore / Managed-Back Ref / DTOs</td></tr>
+                            <tr><td>@JsonIgnore Applied On</td><td>N/A</td><td>Bar.foo</td></tr>
+                                                            <tr><td>API Response Example</td><td>GET /foo/1<br><code>{ "fooId": "uuid-123", "bar": { "barId": "uuid-abc" } }</code></td><td>GET /foo/1<br><code>{ "fooId": "uuid-123", "bar": { "barId": "uuid-abc" } }</code></td></tr>
+                                                            <tr><td>Reverse API Access </td><td>Not possible</td><td>GET /bar/uuid-abc <br><code>// GET /bar/uuid-abc (Bi-directional)
+{
+  "barId": "uuid-abc",
+  "foo": {
+    "fooId": "uuid-123"
+    // The "bar" object inside here is hidden to prevent a loop
+  }
+}</code></td></tr>
+                            <tr><td>Reverse API Access</td><td>Not possible</td><td>GET /bar/uuid-abc<br>{ "barId": "uuid-abc", "foo": { "fooId": "uuid-123" } }</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header">2. Bi-Directional One to One</div>
-            <div class="p-6">
-                <p class="text-sm mb-4">Both entities reference each other. One side MUST use <code>mappedBy</code> to identify the non-owning side.</p>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="code-block text-xs">
-                        <span class="comment">// Owner (Physical FK in DB)</span><br>
-                        <span class="annotation">@OneToOne</span><br>
-                        <span class="annotation">@JoinColumn</span>(name = "person_id")<br>
-                        <span class="keyword">private</span> Person person;
-                    </div>
-                    <div class="code-block text-xs">
-                        <span class="comment">// Inverse (Java-only link)</span><br>
-                        <span class="annotation">@OneToOne</span>(mappedBy = "person")<br>
-                        <span class="keyword">private</span> Passport passport;
-                    </div>
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sec2">
+                    @ONETOMANY
+                </button>
+            </h2>
+            <div id="sec2" class="accordion-collapse collapse">
+                <div class="accordion-body p-0">
+                      <table class="table table-bordered align-middle">
+                        <thead>
+                            <tr>
+                                <th>Section</th>
+                                <th>Uni-directional One-to-Many (Join Table)</th>
+                                <th>Bi-directional One-to-Many (FK in Bar)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Uni / Bi Usage (OneToMany)</td><td>Use uni-directional when parent-only access is needed</td><td>Use bi-directional when child must know its parent</td></tr>
+                            <tr><td>Uni / Bi Usage (ManyToOne)</td><td>Always uni-directional (child → parent)</td><td>Pair with OneToMany only if reverse navigation needed</td></tr>
+                            <tr><td>Relationship Type</td><td>Foo -> Bar (List&lt;Bar&gt;)</td><td>Foo <-> Bar (One Foo, Many Bars)</td></tr>
+                            <tr><td>Navigation</td><td>Foo can access Bars only</td><td>Foo can access Bars, Bar can access Foo</td></tr>
+                            <tr><td>Owning Side</td><td>Foo</td><td>Bar</td></tr>
+                            <tr><td>Mapping Strategy</td><td>@OneToMany + @JoinTable</td><td>@OneToMany / @ManyToOne</td></tr>
+                            <tr><td>Join / FK Location</td><td>FOO_BAR.fooId, FOO_BAR.barId</td><td>bar.fooId</td></tr>
+                            <tr><td>Join Table Used</td><td>Yes (FOO_BAR)</td><td>No</td></tr>
+                          <tr><td>Foo Entity Code</td><td><pre><span class="anno">@OneToMany</span>
+<span class="anno">@JoinTable</span>(name = "FOO_BAR", 
+  joinColumns = <span class="anno">@JoinColumn</span>(name="fooId"),
+  inverseJoinColumns = <span class="anno">@JoinColumn</span>(name="barId"))
+<span class="keyword">private</span> List&lt;Bar&gt; bars;</pre></td><td><pre><span class="anno">@OneToMany</span>(mappedBy = "foo")
+<span class="keyword">private</span> List&lt;Bar&gt; bars;</pre></td></tr>
+                                <tr><td>Bar Entity Code</td><td>// no mapping to Foo</td><td><pre><span class="anno">@ManyToOne</span>
+<span class="anno">@JoinColumn</span>(name = "fooId")
+<span class="keyword">private</span> Foo foo;</pre></td></tr>
+ <tr><td>API Response Example</td><td>// GET /user/1<br><code>
+{
+  "fooId": "uuid-user-1",
+  "bars": [
+    { "barId": "uuid-role-admin" },
+    { "barId": "uuid-role-editor" }
+  ]
+}</code></td><td>GET /foo/uuid-123 <br><code>// GET /bar/role-admin
+{
+  "barId": "uuid-role-admin",
+  "foo": {
+    "fooId": "uuid-user-1"
+    // Potential infinite loop starts here if not handled
+  }
+}</code></td></tr>
+                                                           
+                            <tr><td>Optional Join Entity</td><td>FooBar (@Entity, @Table FOO_BAR)</td><td>Not applicable</td></tr>
+                            <tr><td>DB Table Structure</td><td>foo(no FK)<br>bar(no FK)<br>FOO_BAR(fooId FK, barId FK)</td><td>foo(no FK)<br>bar(fooId FK)</td></tr>
+                            <tr><td>Cascade Risk</td><td>Low (Bars not deleted with Foo)</td><td>Medium (depends on cascade config)</td></tr>
+                            <tr><td>Infinite Loop Risk (JSON)</td><td>None</td><td>Possible without @JsonIgnore / refs</td></tr>
+                            <tr><td>Loop Prevention Strategy</td><td>Not required</td><td>@JsonIgnore / Managed-Back Ref / DTOs</td></tr>
+                            <tr><td>@JsonIgnore Applied On</td><td>N/A</td><td>Bar.foo</td></tr>
+                            <tr><td>Common Use Case</td><td>User → Roles (Spring Security)</td><td>Parent → Children</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header">3. Uni-Directional One to Many</div>
-            <div class="p-6">
-                <p class="text-sm mb-2">A single parent has a collection of children. Always use <code>@JoinColumn</code> to avoid an automatic join table.</p>
-                <div class="code-block">
-                    <span class="annotation">@OneToMany</span>(cascade = CascadeType.ALL)<br>
-                    <span class="annotation">@JoinColumn</span>(name = "order_id") <span class="comment">// FK is stored in the Child table</span><br>
-                    <span class="keyword">private</span> List&lt;Item&gt; items;
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sec3">
+                    @MANYTOMANY
+                </button>
+            </h2>
+            <div id="sec3" class="accordion-collapse collapse">
+                <div class="accordion-body p-0">
+                    <table class="table table-bordered align-middle">
+                        <thead>
+                            <tr>
+                                <th>Section</th>
+                                <th>Bi-directional Many-to-Many (Hibernate Join Table)</th>
+                                <th>Bi-directional Many-to-Many (User-Managed Join Entity)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Uni / Bi Usage</td><td>Rarely recommended; complex and hard to manage</td><td>Use only when both sides truly need navigation</td></tr>
+                            <tr><td>Relationship Type</td><td>Foo <-> Bar (List&lt;Bar&gt; / List&lt;Foo&gt;)</td><td>Foo <-> Bar via FooBar</td></tr>
+                            <tr><td>Navigation</td><td>Foo can access Bars, Bar can access Foos</td><td>Foo ↔ FooBar ↔ Bar</td></tr>
+                            <tr><td>Owning Side</td><td>Both (logical)</td><td>FooBar</td></tr>
+                            <tr><td>Mapping Strategy</td><td>@ManyToMany via @JoinTable</td><td>Two @OneToMany + @ManyToOne</td></tr>
+                            <tr><td>Join Table Name</td><td>FOO_BAR</td><td>FOO_BAR</td></tr>
+                            <tr><td>Foreign Key Location</td><td>FOO_BAR.fooId, FOO_BAR.barId</td><td>FOO_BAR.fooId, FOO_BAR.barId</td></tr>
+                            <tr><td>Join Entity Exists</td><td>No</td><td>Yes (FooBar)</td></tr>
+                         <tr><td>Foo Entity Code</td><td><pre><span class="anno">@ManyToMany</span>
+<span class="anno">@JoinTable</span>(name="FOO_BAR",
+  joinColumns=<span class="anno">@JoinColumn</span>(name="fooId"),
+  inverseJoinColumns=<span class="anno">@JoinColumn</span>(name="barId"))
+<span class="keyword">private</span> List&lt;Bar&gt; bars;</pre></td><td><pre><span class="anno">@OneToMany</span>(mappedBy = "foo")
+<span class="keyword">private</span> List&lt;FooBar&gt; bars;</pre></td></tr>
+                                <tr><td>Bar Entity Code</td><td><pre><span class="anno">@ManyToMany</span>(mappedBy="bars")
+<span class="keyword">private</span> List&lt;Foo&gt; foos;</pre></td><td><pre><span class="anno">@OneToMany</span>(mappedBy = "bar")
+<span class="keyword">private</span> List&lt;FooBar&gt; foos;</pre></td></tr>
+                                <tr><td>Join Entity Code</td><td>N/A</td><td><pre><span class="anno">@Entity</span> FooBar
+<span class="anno">@ManyToOne</span> Foo
+<span class="anno">@ManyToOne</span> Bar</pre></td></tr>
+ <tr><td>API Response Example</td><td>// GET /foo/1<br><code>
+
+{
+  "fooId": "uuid-1",
+  "bars": [
+    {
+      "barId": "uuid-A",
+      "foos": [ { "fooId": "uuid-1" }, { "fooId": "uuid-2" } ] // Infinite loop risk!
+    }
+  ]
+}</code></td><td>// GET /foo/1 <br><code>
+{
+  "fooId": "uuid-1",
+  "bars": [
+    {
+      "fooBarId": "link-uuid-101",
+      "createdDate": "2026-02-04",
+      "bar": {
+        "barId": "uuid-A"
+      }
+    }
+  ]
+}</code></td></tr>
+                               
+                            <tr><td>DB Table Structure</td><td>foo(no FK)<br>bar(no FK)<br>FOO_BAR(fooId FK, barId FK)</td><td>foo(no FK)<br>bar(no FK)<br>FOO_BAR(fooId FK, barId FK, extra columns)</td></tr>
+                            <tr><td>Cascade Risk</td><td>High if misconfigured</td><td>Low (controlled explicitly)</td></tr>
+                            <tr><td>Loop Prevention Strategy</td><td>@JsonIgnore / Managed-Back Ref / DTOs</td><td>@JsonIgnore / DTOs</td></tr>
+                            <tr><td>Common Use Case</td><td>Simple tag/category mapping</td><td>Roles with metadata, audit trails</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header">4. Bi-directional One to Many (Foreign Key Mapping)</div>
-            <div class="p-6">
-                <p class="text-sm mb-4">The standard approach. The 'Many' side owns the relationship because it holds the <code>dept_id</code> FK.</p>
-                
-                <div class="code-block">
-                    <span class="comment">// In Employee.java (The Owner)</span><br>
-                    <span class="annotation">@ManyToOne</span><br>
-                    <span class="annotation">@JoinColumn</span>(name = "dept_id")<br>
-                    <span class="keyword">private</span> Department department;
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sec4">
+                    Hibernate Best Practices (1-8)
+                </button>
+            </h2>
+            <div id="sec4" class="accordion-collapse collapse">
+                <div class="accordion-body">
+                    <div id="owning" class="table-card">
+                <h5>1️ Determining the Owning Side (Bi-Directional Relationships)</h5>
+                <table class="table table-bordered">
+                    <tr><th>Topic</th><th>Explanation</th></tr>
+                    <tr><td>What is Owning Side</td><td>Side that contains the foreign key in the database</td></tr>
+                    <tr><td>Why It Matters</td><td>Determines which table stores the FK and controls updates</td></tr>
+                    <tr><td>Hibernate Behavior</td><td>Hibernate works either way; only FK location changes</td></tr>
+                    <tr><td>General Rule</td><td>The side with the collection usually owns the relationship</td></tr>
+                    <tr><td>Practical Guideline</td><td>Own the relationship from the object you manipulate most</td></tr>
+                    <tr><td>Example</td><td>User has List&lt;Role&gt; → Role owns the relationship</td></tr>
+                    <tr><td>Cascade Location</td><td>Usually defined on the owning side</td></tr>
+                </table>
+            </div>
+
+            <div id="fetch" class="table-card">
+                <h5>2️ Fetch Type Decision (LAZY vs EAGER)</h5>
+                <table class="table table-bordered">
+                    <tr><th>Topic</th><th>When to Use</th></tr>
+                    <tr><td>fetchType.LAZY</td><td>When collection is not always needed</td></tr>
+                    <tr><td>Performance Impact</td><td>Very high performance benefit</td></tr>
+                    <tr><td>Default Behavior</td><td>Hibernate defaults to LAZY for collections</td></tr>
+                    <tr><td>fetchType.EAGER</td><td>When related data is almost always required</td></tr>
+                    <tr><td>Performance Cost</td><td>High – extra checks and joins</td></tr>
+                    <tr><td>Warning</td><td>Do NOT use EAGER just to fix LazyInitializationException</td></tr>
+                    <tr><td>Design Smell</td><td>Using EAGER to fix lazy issues indicates poor design</td></tr>
+                </table>
+            </div>
+
+            <div id="lazy" class="table-card">
+                <h5>3️ Handling LazyInitializationException (Correct Way)</h5>
+                <table class="table table-bordered">
+                    <tr><th>Approach</th><th>Description</th></tr>
+                    <tr><td>Bad Practice</td><td>Changing fetchType to EAGER</td></tr>
+                    <tr><td>Recommended</td><td>Initialize collection explicitly in Service layer</td></tr>
+                    <tr><td>Example Method</td><td>Hibernate.initialize(entity.getCollection())</td></tr>
+                    <tr><td>Transaction Scope</td><td>Must be inside @Transactional</td></tr>
+                    <tr><td>Downside</td><td>No control over fetch strategy</td></tr>
+                </table>
+            </div>
+
+            <div id="dao" class="table-card">
+                <h5>4️ DAO-Level Fetch Control (Advanced)</h5>
+                <table class="table table-bordered">
+                    <tr><th>Topic</th><th>Explanation</th></tr>
+                    <tr><td>Purpose</td><td>Control how Hibernate fetches collections</td></tr>
+                    <tr><td>Tool Used</td><td>Criteria / FetchMode</td></tr>
+                    <tr><td>Common FetchMode</td><td>SUBSELECT</td></tr>
+                    <tr><td>Benefit</td><td>Reduces number of queries</td></tr>
+                    <tr><td>Best Used When</td><td>You need performance tuning</td></tr>
+                </table>
+            </div>
+
+            <div id="cascade" class="table-card">
+                <h5>5️ Determining Cascade Direction</h5>
+                <table class="table table-bordered">
+                    <tr><th>Topic</th><th>Explanation</th></tr>
+                    <tr><td>What is Cascade</td><td>Automatically propagates persistence operations</td></tr>
+                    <tr><td>Common Mistake</td><td>Cascading in both directions unnecessarily</td></tr>
+                    <tr><td>Guideline</td><td>Cascade from parent to child</td></tr>
+                    <tr><td>Example</td><td>User → Roles cascade</td></tr>
+                    <tr><td>Reason</td><td>Parent controls lifecycle</td></tr>
+                    <tr><td>Typical Setting</td><td>cascade = CascadeType.ALL on owning side</td></tr>
+                </table>
+            </div>
+
+            <div id="efficiency" class="table-card">
+                <h5>6️ Cascade Efficiency Comparison</h5>
+                <table class="table table-bordered">
+                    <tr><th>Approach</th><th>Cost / Behavior</th></tr>
+                    <tr><td>Save User with Roles</td><td>1 User insert + N Role inserts</td></tr>
+                    <tr><td>Save Roles Individually</td><td>N Role inserts + N User updates</td></tr>
+                    <tr><td>Time Complexity</td><td>O(1) vs O(N)</td></tr>
+                    <tr><td>Recommendation</td><td>Always save parent with children</td></tr>
+                </table>
+            </div>
+
+            <div id="orphan" class="table-card">
+                <h5>7 Orphan Removal (orphanRemoval = true)</h5>
+                <table class="table table-bordered">
+                    <tr><th>Topic</th><th>Explanation</th></tr>
+                    <tr><td>What It Does</td><td>Deletes child if removed from parent collection</td></tr>
+                    <tr><td>When to Use</td><td>True ownership relationships</td></tr>
+                    <tr><td>When NOT to Use</td><td>Shared reference data (e.g., Roles)</td></tr>
+                    <tr><td>Example</td><td>Removing Role from User should NOT delete Role</td></tr>
+                    <tr><td>Risk</td><td>Accidental data loss</td></tr>
+                </table>
+            </div>
+
+            <div id="bestpractices" class="table-card">
+                <h5>8️ Final Hibernate Best-Practice Summary</h5>
+                <table class="table table-bordered">
+                    <tr><th>Area</th><th>Best Practice</th></tr>
+                    <tr><td>Owning Side</td><td>Put FK where data is manipulated most</td></tr>
+                    <tr><td>Fetch Type</td><td>LAZY by default</td></tr>
+                    <tr><td>Cascades</td><td>From parent to child</td></tr>
+                    <tr><td>Orphan Removal</td><td>Only for true ownership</td></tr>
+                    <tr><td>JSON Serialization</td><td>Use DTOs for APIs</td></tr>
+                </table>
+            </div>
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header">5. Bi-Directional Many to Many (Hibernate Managed Join Table)</div>
-            <div class="p-6">
-                <p class="text-sm mb-2">Hibernate hides the link table from the Java code. Use this for simple associations.</p>
-                <div class="code-block text-xs">
-                    <span class="annotation">@ManyToMany</span><br>
-                    <span class="annotation">@JoinTable</span>(<br>
-                    &nbsp;&nbsp;name = "student_course",<br>
-                    &nbsp;&nbsp;joinColumns = <span class="annotation">@JoinColumn</span>(name = "student_id"),<br>
-                    &nbsp;&nbsp;inverseJoinColumns = <span class="annotation">@JoinColumn</span>(name = "course_id")<br>
-                    )<br>
-                    <span class="keyword">private</span> Set&lt;Course&gt; courses;
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sec5">
+                    Deleting Entities Logic
+                </button>
+            </h2>
+            <div id="sec5" class="accordion-collapse collapse">
+                <div class="accordion-body p-0">
+                    <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Relationship Type</th>
+            <th>Delete Action</th>
+            <th>SQL Executed</th>
+            <th>What Actually Happens</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>@OneToOne (Uni)</td>
+            <td>delete Foo (no cascade)</td>
+            <td>DELETE FROM foo WHERE id=?</td>
+            <td>Foo row deleted, Bar remains</td>
+        </tr>
+        <tr>
+            <td>@OneToOne (Uni)</td>
+            <td>delete Foo (cascade REMOVE)</td>
+            <td>
+                DELETE FROM foo WHERE id=?<br>
+                DELETE FROM bar WHERE id=?
+            </td>
+            <td>Foo and Bar deleted</td>
+        </tr>
+        <tr>
+            <td>@OneToOne (Bi)</td>
+            <td>delete Foo (no cascade)</td>
+            <td>
+                UPDATE bar SET foo_id=NULL<br>
+                DELETE FROM foo WHERE id=?
+            </td>
+            <td>Relationship broken, Foo deleted</td>
+        </tr>
+        <tr>
+            <td>@OneToOne (Bi)</td>
+            <td>delete Foo (cascade REMOVE)</td>
+            <td>
+                DELETE FROM foo WHERE id=?<br>
+                DELETE FROM bar WHERE id=?
+            </td>
+            <td>Foo and Bar deleted</td>
+        </tr>
+        <tr>
+            <td>@OneToMany (Uni, Join Table)</td>
+            <td>delete Foo</td>
+            <td>
+                DELETE FROM FOO_BAR WHERE foo_id=?<br>
+                DELETE FROM foo WHERE id=?
+            </td>
+            <td>Join table rows removed, Bars remain</td>
+        </tr>
+        <tr>
+            <td>@OneToMany (Bi, FK in Bar)</td>
+            <td>delete Foo (no cascade)</td>
+            <td>
+                UPDATE bar SET foo_id=NULL<br>
+                DELETE FROM foo WHERE id=?
+            </td>
+            <td>FK cleared on children, Foo deleted</td>
+        </tr>
+        <tr>
+            <td>@OneToMany (Bi, cascade REMOVE)</td>
+            <td>delete Foo</td>
+            <td>
+                DELETE FROM bar WHERE foo_id=?<br>
+                DELETE FROM foo WHERE id=?
+            </td>
+            <td>Children and Foo deleted</td>
+        </tr>
+        <tr>
+            <td>@ManyToMany (Bi, Join Table)</td>
+            <td>delete Foo</td>
+            <td>
+                DELETE FROM FOO_BAR WHERE foo_id=?<br>
+                DELETE FROM foo WHERE id=?
+            </td>
+            <td>Only links removed, Bars remain</td>
+        </tr>
+        <tr>
+            <td>@ManyToMany (Bi, Join Table)</td>
+            <td>delete Bar</td>
+            <td>
+                DELETE FROM FOO_BAR WHERE bar_id=?<br>
+                DELETE FROM bar WHERE id=?
+            </td>
+            <td>Only links removed, Foos remain</td>
+        </tr>
+    </tbody>
+</table>
+
+                </div>
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header">6. Bi-Directional Many to Many (User Managed Join Table Object)</div>
-            <div class="p-6">
-                <p class="text-sm mb-4">Required when the "Relationship" itself has data (e.g., Score, Timestamp, or Quantity).</p>
-                
-                <div class="code-block">
-                    <span class="comment">// The middle entity (Link Table Object)</span><br>
-                    <span class="annotation">@Entity</span><br>
-                    <span class="keyword">public class</span> Enrollment {<br>
-                    &nbsp;&nbsp;<span class="annotation">@ManyToOne</span><span class="keyword"> private</span> Student student;<br>
-                    &nbsp;&nbsp;<span class="annotation">@ManyToOne</span><span class="keyword"> private</span> Course course;<br>
-                    &nbsp;&nbsp;<span class="keyword">private int</span> grade; <span class="comment">// User-managed extra data</span><br>
-                    }
-                </div>
-            </div>
-        </div>
+    </div>
+</div>
 
-        <h2 class="text-3xl font-bold mb-8 text-indigo-900 border-b-4 border-indigo-200 inline-block">02. Ownership & Performance Logic</h2>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-            <div class="p-6 bg-white rounded-xl shadow border">
-                <h3 class="font-bold text-lg text-indigo-800 mb-3 underline">Ownership Strategy</h3>
-                <p class="text-sm mb-2">Ownership determines which table the FK is stored on. Typically, the Many-side owns the link.</p>
-                <div class="logic-box">
-                    <strong>Example:</strong> In a User-Role setup, manipulate the Roles through the list of Roles on a User by using Cascade. This is O(1) in terms of DAO logic compared to iterating through roles.
-                </div>
-            </div>
-
-            <div class="p-6 bg-white rounded-xl shadow border">
-                <h3 class="font-bold text-lg text-indigo-800 mb-3 underline">Fetch Strategy (LAZY vs EAGER)</h3>
-                <p class="text-sm mb-2">Lazily fetched collections are safer. <code>EAGER</code> loading can lead to massive performance penalties and Heap memory issues.</p>
-                <div class="logic-box">
-                    <strong>Manual Load:</strong> If you need a collection just for one call, use:<br>
-                    <code>Hibernate.initialize(person.getRoles());</code>
-                </div>
-            </div>
-        </div>
-
-        <div class="card border-t-4 border-red-500">
-            <div class="card-header bg-red-900">Advanced Case Study: Heap Crash & Batching</div>
-            <div class="p-6">
-                <p class="text-sm mb-4">For bulk jobs (e.g., <80,000+ inserts), standard Hibernate caching will crash the system. <strong>Always flush and clear:</strong></p>
-                <div class="code-block">
-                    <span class="keyword">for</span> (<span class="keyword">int</span> i = 0; i < objects.size(); i++) {<br>
-                    &nbsp;&nbsp;em.persist(objects.get(i));<br>
-                    &nbsp;&nbsp;<span class="keyword">if</span> (i % 50 == 0) {<br>
-                    &nbsp;&nbsp;&nbsp;&nbsp;em.flush(); em.clear(); <span class="comment">// Fixes memory leak</span><br>
-                    &nbsp;&nbsp;}<br>
-                    }
-                </div>
-            </div>
-        </div>
-
-    </main>
-
-    <footer class="bg-indigo-950 text-indigo-400 py-12 text-center text-xs">
-        <p>Reference Guide for Hibernate & JPA | Based on community insights from StackOverflow</p>
-    </footer>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function expandAll() {
+        document.querySelectorAll('.accordion-collapse').forEach(el => el.classList.add('show'));
+        document.querySelectorAll('.accordion-button').forEach(el => el.classList.remove('collapsed'));
+    }
+    function collapseAll() {
+        document.querySelectorAll('.accordion-collapse').forEach(el => el.classList.remove('show'));
+        document.querySelectorAll('.accordion-button').forEach(el => el.classList.add('collapsed'));
+    }
+    document.getElementById('searchInput').addEventListener('keyup', function() {
+        let val = this.value.toLowerCase();
+        document.querySelectorAll('tbody tr').forEach(row => {
+            row.style.display = row.innerText.toLowerCase().includes(val) ? '' : 'none';
+        });
+    });
+</script>
 </body>
 </html>
